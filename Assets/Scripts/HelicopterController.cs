@@ -2,8 +2,8 @@ using UnityEngine;
 using System.Collections;
 
 [RequireComponent(typeof(Rigidbody))]
-[RequireComponent (typeof(ClickHandler))]
-public class HelicopterController : MonoBehaviour
+[RequireComponent(typeof(ClickHandler))]
+public class HelicopterController : MonoBehaviour,IPooledObject
 {
     [Header("Movement Settings")]
     [SerializeField] private Transform[] waypoints;
@@ -12,32 +12,40 @@ public class HelicopterController : MonoBehaviour
     [SerializeField] private float decelerationDistance = 5f;
     [SerializeField] private float rotationSpeed = 3f;
     [SerializeField] private float tiltAmount = 25f;
-    [SerializeField] private float hoverHeight = 10f;
+    [SerializeField] private float hoverHeight = 0f;
     [SerializeField] private float movementDelay = 3f;
 
     [Header("Hover Wobble Settings")]
     [SerializeField] private float wobbleIntensity = 0.2f;
     [SerializeField] private float wobbleFrequency = 1f;
 
-    [SerializeField]private bool isMoving = false;
-    [SerializeField]private Animator animator;
+    [Header("other")]
+    [SerializeField] private bool isMoving = false;
+    [SerializeField] private Animator animator;
     [SerializeField] private ParticleSystem explosionParticleSystem;
-    private Vector3 targetPosition;
+    [SerializeField] private float removeObjectAfterDeathDelay = 4;
+    [SerializeField] private Vector3 targetPosition;
     private int currentWaypointIndex = 0;
     private float currentSpeed = 0f;
     private float noiseOffset;
-    private new Rigidbody  rigidbody;
+    private new Rigidbody rigidbody;
     ClickHandler clickHandler;
 
-    void Start()
+    void newAwake()
     {
+        Debug.Log("start new Helicopter");
         if (waypoints.Length == 0) Debug.LogError("No way-points assigned!");
         noiseOffset = Random.Range(0f, 100f);
-        PickNewWaypoint();
-        ToggleMovingState(true);
-        clickHandler=this.GetComponent<ClickHandler>();
+        Invoke("PickNewWaypoint", 1f);
+        clickHandler = this.GetComponent<ClickHandler>();
         clickHandler.ObjectClicked += OnPlaneClciked;
         this.rigidbody = GetComponent<Rigidbody>();
+    }
+
+    public void OnObjectSpawn()
+    {
+        Debug.Log("new helicopter spawned");
+        newAwake();
     }
 
     void Update()
@@ -76,13 +84,19 @@ public class HelicopterController : MonoBehaviour
 
     void OnPlaneClciked(GameObject clickedObject)
     {
-        Debug.Log(" you clicked me");
         ToggleMovingState(false);
         CancelInvoke(); // to stop Invoke("PickNewWaypoint", movementDelay);
         rigidbody.useGravity = true;
         animator.SetTrigger("die");
         explosionParticleSystem.gameObject.SetActive(true);
         explosionParticleSystem.Play();
+        Invoke("AfterDeath", removeObjectAfterDeathDelay);
+    }
+
+    //gets called from OnPlaneClciked with invoke()
+    void AfterDeath()
+    {
+        gameObject.SetActive(false);
     }
 
     void HandleRotation(Vector3 direction)
@@ -90,7 +104,7 @@ public class HelicopterController : MonoBehaviour
         if (direction != Vector3.zero)
         {
             // Face exactly toward target (Y rotation only)
-            Quaternion targetRotation = Quaternion.LookRotation(new Vector3(direction.x,0, direction.z));
+            Quaternion targetRotation = Quaternion.LookRotation(new Vector3(direction.x, 0, direction.z));
             transform.rotation = Quaternion.Slerp(
                 transform.rotation,
                 targetRotation,
@@ -142,7 +156,7 @@ public class HelicopterController : MonoBehaviour
         do
         {
             newIndex = Random.Range(0, waypoints.Length);
-        } while (newIndex == currentWaypointIndex && waypoints.Length > 1);
+        } while (newIndex == currentWaypointIndex);
 
         currentWaypointIndex = newIndex;
         targetPosition = waypoints[currentWaypointIndex].position + Vector3.up * hoverHeight;
@@ -174,6 +188,7 @@ public class HelicopterController : MonoBehaviour
 
     private void OnDisable()
     {
-        clickHandler.ObjectClicked -= OnPlaneClciked;
+        //clickHandler.ObjectClicked -= OnPlaneClciked;
     }
+
 }
