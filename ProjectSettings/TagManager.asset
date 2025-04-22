@@ -13,7 +13,7 @@ TagManager:
   - 
   - Water
   - UI
-  - 
+  - UI Camera View
   - 
   - 
   - 
@@ -40,6 +40,9 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: UI Camera View
+    uniqueID: 462392751
+    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0
