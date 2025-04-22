@@ -1,7 +1,6 @@
 using UnityEngine;
 
-[RequireComponent (typeof(ClickHandler))]
-public class CircularMovementWithRotation : MonoBehaviour
+public class CircularMovementWithRotation : MonoBehaviour,UIRayCaster.IInteractable
 {
     [Header("Circle Settings")]
     public float radius = 5f;
@@ -20,15 +19,12 @@ public class CircularMovementWithRotation : MonoBehaviour
     private CharacterController characterController;
     private bool isZombieAlive = true;
     private float currentSpeed = 0f;
-    ClickHandler clickHandler;
+
     void Start()
     {
         centerPosition = centerPointTransform.position;
         if (animator == null) animator = GetComponent<Animator>();
         characterController = GetComponent<CharacterController>();
-
-        clickHandler = GetComponent<ClickHandler>();
-        clickHandler.ObjectClicked += OnZombieClicked;
         Invoke("TriggerWalkingAnimation",2f);
 
         // Set initial position on the circle
@@ -108,7 +104,7 @@ public class CircularMovementWithRotation : MonoBehaviour
         }
     }
 
-    void OnZombieClicked(GameObject clickedObject)
+    void OnZombieClicked()
     {
         isZombieAlive = false;
         animator.SetTrigger(dieingAnimationParam);
@@ -162,10 +158,14 @@ public class CircularMovementWithRotation : MonoBehaviour
 
     void OnDisable()
     {
-        clickHandler.ObjectClicked -= OnZombieClicked;
         if (animator != null)
         {
             animator.SetTrigger("Wait");
         }
+    }
+
+    public void OnInteract()
+    {
+        OnZombieClicked();
     }
 }

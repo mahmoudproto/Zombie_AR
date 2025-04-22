@@ -3,7 +3,7 @@ using System.Collections;
 
 [RequireComponent(typeof(Rigidbody))]
 [RequireComponent(typeof(ClickHandler))]
-public class HelicopterController : MonoBehaviour,IPooledObject
+public class HelicopterController : MonoBehaviour,IPooledObject,UIRayCaster.IInteractable
 {
     [Header("Movement Settings")]
     [SerializeField] private Transform[] waypoints;
@@ -25,27 +25,25 @@ public class HelicopterController : MonoBehaviour,IPooledObject
     [SerializeField] private ParticleSystem explosionParticleSystem;
     [SerializeField] private float removeObjectAfterDeathDelay = 4;
     [SerializeField] private Vector3 targetPosition;
+
     private int currentWaypointIndex = 0;
     private float currentSpeed = 0f;
     private float noiseOffset;
     private new Rigidbody rigidbody;
-    ClickHandler clickHandler;
 
-    void newAwake()
+    void Intialize()
     {
         Debug.Log("start new Helicopter");
         if (waypoints.Length == 0) Debug.LogError("No way-points assigned!");
         noiseOffset = Random.Range(0f, 100f);
         Invoke("PickNewWaypoint", 1f);
-        clickHandler = this.GetComponent<ClickHandler>();
-        clickHandler.ObjectClicked += OnPlaneClciked;
         this.rigidbody = GetComponent<Rigidbody>();
     }
 
     public void OnObjectSpawn()
     {
         Debug.Log("new helicopter spawned");
-        newAwake();
+        Intialize();
     }
 
     void Update()
@@ -82,7 +80,7 @@ public class HelicopterController : MonoBehaviour,IPooledObject
         }
     }
 
-    void OnPlaneClciked(GameObject clickedObject)
+    void OnPlaneClciked()
     {
         ToggleMovingState(false);
         CancelInvoke(); // to stop Invoke("PickNewWaypoint", movementDelay);
@@ -186,9 +184,9 @@ public class HelicopterController : MonoBehaviour,IPooledObject
         }
     }
 
-    private void OnDisable()
+    public void OnInteract()
     {
-        //clickHandler.ObjectClicked -= OnPlaneClciked;
+        Debug.Log("got hit by the cross-hair ");
+        OnPlaneClciked();
     }
-
 }

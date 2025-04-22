@@ -21,4 +21,9 @@ public class ClickHandler : MonoBehaviour
         ObjectClicked?.Invoke(this.gameObject);
     }
 
+    public void Shoot()
+    {
+
+    }
+
 }
